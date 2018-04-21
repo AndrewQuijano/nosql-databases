@@ -5,3 +5,73 @@
 // If you'd like to test your commands, you can run 'cat homework_4.txt | cypher-shell -u neo4j -p test' from
 // the vagrant box command line. Make sure neo4j is running first.
 // CREATE (a:person { name: 't' });
+
+// Create 8 people and properties from Game of Thrones
+CREATE (n:Person { fname: 'Lyanna', family: 'Stark'})
+CREATE (n:Person { fname: 'Jon', family: 'Snow'})
+CREATE (n:Person { fname: 'Robb', family: 'Stark'})
+CREATE (n:Person { fname: 'Arya', family: 'Stark'})
+
+CREATE (n:Kingdom { territory: 'The North'})
+CREATE (n:Direwolf { dog: 'Ghost'})
+CREATE (n:Direwolf { dog: 'Grey Wind'})
+CREATE (n:Direwolf { dog: 'Nymeria'})
+
+// Create 12 Relationships, 5 are about ownership
+MATCH (a:Person),(b:Kingdom)
+WHERE a.fname = 'Robb' AND a.family = 'Stark' AND b.territory = 'The North'
+CREATE (a)-[r:KING_OF {Since: 'Season 1'}]->(b)
+
+MATCH (a:Person),(b:Kingdom)
+WHERE a.fname = 'Jon' AND a.family = 'Snow' AND b.territory = 'The North'
+CREATE (a)-[r:HEIR_OF {Since: 'Season 2'}]->(b)
+
+MATCH (a:Person),(b:Direwolf)
+WHERE a.fname = 'Jon' AND a.family = 'Snow' AND b.dog = 'Ghost'
+CREATE (a)-[r:OWNER_OF {Since: 'Season 1'}]->(b)
+
+MATCH (a:Person),(b:Direwolf)
+WHERE a.fname = 'Arya' AND a.family = 'Stark' AND b.dog = 'Nymeria'
+CREATE (a)-[r:OWNER_OF {Since: 'Season 1'}]->(b)
+
+MATCH (a:Person),(b:Direwolf)
+WHERE a.fname = 'Robb' AND a.family = 'Stark' AND b.dog = 'Grey Wind'
+CREATE (a)-[r:OWNER_OF {Since: 'Season 1'}]->(b)
+
+//==========Create 7 more relationships...between family (1: Robb and Arya)=========
+MATCH (a:Person),(b:Person)
+WHERE a.fname = 'Robb' AND a.family = 'Stark' AND a.fname = 'Arya' AND b.family = 'Stark'
+CREATE (a)-[r:SIBLING_OF {Since: 'Season 1'}]->(b)
+
+MATCH (a:Person),(b:Person)
+WHERE a.fname = 'Arya' AND a.family = 'Stark' AND a.fname = 'Robb' AND b.family = 'Stark'
+CREATE (a)-[r:SIBLING_OF {Since: 'Season 1'}]->(b)
+
+//==========Create 5 more relationships...between family (2: Robb and Jon Snow)=========
+MATCH (a:Person),(b:Person)
+WHERE a.fname = 'Robb' AND a.family = 'Stark' AND a.fname = 'Jon' AND b.family = 'Snow'
+CREATE (a)-[r:COUSIN_OF {Since: 'Season 7'}]->(b)
+
+MATCH (a:Person),(b:Person)
+WHERE a.fname = 'Jon' AND a.family = 'Snow' AND a.fname = 'Robb' AND b.family = 'Stark'
+CREATE (a)-[r:COUSIN_OF {Since: 'Season 7'}]->(b)
+
+//==========Create 3 more relationships...between family (1: Arya and Jon)=========
+MATCH (a:Person),(b:Person)
+WHERE a.fname = 'Arya' AND a.family = 'Stark' AND a.fname = 'Jon' AND b.family = 'Snow'
+CREATE (a)-[r:COUSIN_OF {Since: 'Season 7'}]->(b)
+
+MATCH (a:Person),(b:Person)
+WHERE a.fname = 'Jon' AND a.family = 'Snow' AND a.fname = 'Arya' AND b.family = 'Stark'
+CREATE (a)-[r:COUSIN_OF {Since: 'Season 7'}]->(b)
+
+//==========Finally the most important relation===========
+MATCH (a:Person),(b:Person)
+WHERE a.fname = 'Lyanna' AND a.family = 'Stark' AND a.fname = 'Jon' AND b.family = 'Snow'
+CREATE (a)-[r:Mother_OF {Since: 'Season 7'}]->(b)
+
+//============2 Queries, SEASON 7 SPOILERS=================
+
+
+
+
