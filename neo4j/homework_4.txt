@@ -46,7 +46,5 @@ MATCH (a:Person),(b:Person) WHERE a.fname = 'Jon' AND a.family = 'Snow' AND b.fn
 MATCH (a:Person),(b:Person) WHERE a.fname = 'Lyanna' AND a.family = 'Stark' AND b.fname = 'Jon' AND b.family = 'Snow' CREATE (a)-[r:Mother_OF {Since: 'Season 7'}]->(b);
 
 //============2 Queries, SEASON 7 SPOILERS=================
-MATCH (a:Person),(b:Person) WHERE a.fname = 'Jon' AND a.family = 'Snow' AND b.fname = 'Lyanna' AND b.family = 'Stark' RETURN type(r), r.COUSIN_OF;
-
-
-
+MATCH p = (n {fname: 'Jon'})-[rs1*]->() WHERE ALL(rel in rs1 WHERE rel.relevance_score is null) RETURN p;
+MATCH p = (n {fname: 'Lyanna'})-[rs1*]->() WHERE ALL(rel in rs1 WHERE rel.relevance_score is null) RETURN p;
