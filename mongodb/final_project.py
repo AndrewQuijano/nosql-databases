@@ -3,52 +3,100 @@ from pprint import pprint
 import pymongo
 from pymongo import MongoClient
 
+#=======================================================================================
 # Put the use case you chose here. Then justify your database choice:
-# Use Case: Hackernews
+# Use Case: Hacker news
 # Database selection: Mongodb
+
+#=======================================================================================
 # Why?
-# Mongodb has a flexible schema. This means that the design can easily change without all the
-# complexities of relational databases if something like another column needed to be added. If
-# hackernews expands
-# Mongodb is scalable
-# Finally, Mongodb software is free. the database administrator would only need to
-# pay mongodb if they need technical support.
+# 1- Mongodb supports a flexible schema. This can be easily seen in this project as I was required to
+# make 8 models. But with MongoDB, I can easily add more models as mongodb was designed to not have to use join
+# like relational database (e. g. SQL).
+
+# 2- Mongodb supports embedded documents, this works well with comments as
+# they are made of multiple parts (time, writer, data) and there are multiple comments
+# attached to an article
+
+# 3- Querying in a field means the user can query a specific comment in an article and access
+# traits unique to that comment
+
+# 4- It support aggregation, which is useful for commands like
+# counting number of users in the database
+
+# 5- Mongodb is good for high availability systems because it supports fail over. In a
+#system where there is a primary and multiple secondary server, the secondary serves can become the
+#primary server if the primary server is out of commission.
+
+# 6- Mongodb supports preference. If hacker news become a big business with multiple servers, a user
+# can use this to have high performance in reading articles, especially if there aren't that many users
+# who write articles.
+
+# 7- Mongodb supports sharding, meaning that when hacker news becomes a big business as well, the database
+# can be fragmented into multiple chunks. This can be useful to shard asks/answers and articles. It might be useful
+# because there is probably a good chance ask/responding to asks will be more write intensive. But if it is sharded
+# the performance costs of writing can be mitigated and not effect users writing articles.
+
+
+#====================================================================================================================
 
 # Explain what will happen if coffee is spilled on one of the servers in your cluster, causing it to go down.
 # If the server crashes.
-# Since all the operations are atomic, there should be no data lost.
-#
+# Since all writes go to disk unlike Redis, there is no concern of data being lost on shutdown.
+
+# ==================================================================================================================
+
 # What data is it not ok to lose in your app?
-# What can you do in your commands to mitigate the risk of lost data?
+# The most important would be the users. Losing the username and passwords would be bad for business.
+# Also, it would be bad to lose a user's articles posted/questions. This may make a customer feel devalued if we
+# don't take care of their data posts. By extension we also need to preserver their reading lists. With regards to job
+# lists, this will not be ok to lose because this might be a revenue source as the app could be used by recruiters.
+# Also, we want to ensure our users are happy knowing they got their job applications sent (and hopefully) obtained the
+# job because of hacker news. Finally, the questions/answers also can't be lost by the app. The first reason is ensure
+# the happiness of our users. But also, this can avoid repeat questions getting asked saving a user's time.
 
-# Create a client, this is the default
-client = MongoClient()
+# However, if a comment to an article is lost, it might not be crucial for hacker news to dedicate
+# resources to ensure they are maintained. This is because usually people will post and forget the comment. Also,
+# upvotes exist to determine the value of the article.
 
-# Get the database and collection
-db = client.test
-collection = db.movies
+def init():
+    # Create a client, this is the default
+    client = MongoClient()
 
-db.inventory.insert([
-   { "_id" : 1, "username" : "Emily", "password": "passwerd", "Articles_Posted" : 120,  },
-   { "_id" : 2, "username" : "Jae", "password": "passwerd123", "Articles_Posted" : 80,  },
-   { "_id" : 3, "username" : "Debra", "password": "Unbreakable", "Articles_Posrted" : 60, },
-])
-print('Just created 3 users...')
+    # Get the database and collection
+    db = client.test
+    collection = db.movies
 
-db.inventory.insert([
-   { "_id" : 1, "Title" : "Emily", "upvotes": 1, "comments:": "Your article is bad and you should feel bad!",
-     "link":"www.google.com", "Author_id": 1},
-   { "_id" : 2, "Title" : "Jae",   "upvotes": 1, "comments:": "Your article is bad and you should feel bad!",
-     "link":"www.google.com", "Author_id": 1  },
-   { "_id" : 3, "Title" : "Debra", "upvotes": 1,  "comments:": "Your article is bad and you should feel bad!",
-     "link":"www.google.com", "Author_id": 1},
-])
-print('Created 15 other objects...')
+    db.inventory.insert([
+    { "_id" : 1, "username" : "Emily", "password": "passwerd", "Articles_Posted" : 120,  },
+    { "_id" : 2, "username" : "Jae", "password": "passwerd123", "Articles_Posted" : 80,  },
+    { "_id" : 3, "username" : "Debra", "password": "Unbreakable", "Articles_Posrted" : 60, },
+    ])
+    print('Just created 3 users...')
+
+    db.inventory.insert([
+    { "_id" : 1, "Title" : "Emily", "upvotes": 1, "comments:": "Your article is bad and you should feel bad!",
+      "link":"www.google.com", "Author_id": 1},
+    { "_id" : 2, "Title" : "Jae",   "upvotes": 1, "comments:": "Your article is bad and you should feel bad!",
+    "link":"www.google.com", "Author_id": 1  },
+    { "_id" : 3, "Title" : "Debra", "upvotes": 1,  "comments:": "Your article is bad and you should feel bad!",
+    "link":"www.google.com", "Author_id": 1},
+    ])
+    print('Created 15 other objects...')
 
 # Action 1: From given example
 # A user publishes an article (UPDATE)
-def Action1():
-    print('Action 1')
+def Action1(user, title, link):
+    # Check if the user exists
+
+    # Insert document
+    Action1Result  = db.inventory.insert([{
+        "_id": 1,
+        "Title": "",
+        "upvotes": 0,
+        "comments:": "Your article is bad and you should feel bad!",
+        "link": link}])
+    print(Action1Result)
 
 # Action 2: <describe the action here>
 # A user sees a list of the 10 highest-voted articles
@@ -57,8 +105,13 @@ def Action2():
 
 # Action 3: <describe the action here>
 # A user up-votes an article
-def Action3():
-    print('Action 1')
+def Action3(article):
+    # Find the article and up vote it. DO IT in 1 UPDATE
+    Action3Result = collection.update(
+        {"Title": article},     # Given this condition being true
+        {"$inc": {"upvotes": 1}}# Increment upvote
+    )
+    print(Action3Result)
 
 # Action 4: <describe the action here> (UPDATE)
 # A user comments on an article
@@ -87,7 +140,7 @@ def Action8():
 
 # Program to read input from user and use as needed
 def main():
-
+    init()
     try:
         while(True):
             # Get input, Make sure you don't get EOF!
@@ -99,8 +152,74 @@ def main():
 
             args = var.split(" ")
             if args[0] == "exit":
-                print('Exiting')
+                print('Exiting...')
                 return
+
+            try:
+                actionNumber = int(args[0])
+            except Exception as ex:
+                die("Invalid Action!")
+
+            if actionNumber == 1:
+                if len(args) != 4:
+                    print('Invalid number of arguments!')
+                    continue
+                user = args[1]
+                title = args[2]
+                link = [3]
+                Action1(user, title, link)
+
+            elif actionNumber == 2:
+                if len(args) != 2:
+                    print('Invalid number of arguments!')
+                    continue
+                article = args[1]
+                Action2(article)
+
+            elif actionNumber == 3:
+                if len(args) != 2:
+                    print('Invalid number of arguments!')
+                    continue
+                article = args[1]
+                Action3(article)
+
+            elif actionNumber == 4:
+                if len(args) != 2:
+                    print('Invalid number of arguments!')
+                    continue
+                article = args[1]
+                Action4(article)
+
+            elif actionNumber == 5:
+                if len(args) != 2:
+                    print('Invalid number of arguments!')
+                    continue
+                article = args[1]
+                Action5(article)
+
+            elif actionNumber == 6:
+                if len(args) != 2:
+                    print('Invalid number of arguments!')
+                    continue
+                article = args[1]
+                Action6(article)
+
+            elif actionNumber == 7:
+                if len(args) != 2:
+                    print('Invalid number of arguments!')
+                    continue
+                article = args[1]
+                Action7(article)
+
+            elif actionNumber == 8:
+                if len(args) != 2:
+                    print('Invalid number of arguments!')
+                    continue
+                article = args[1]
+                Action8(article)
+
+            else:
+                print('Invalid Action')
 
     except KeyboardInterrupt:
         print('\nctrl-c received, exiting')
