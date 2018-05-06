@@ -1,6 +1,5 @@
-import sys
-from pprint import pprint
-import pymongo
+#!/usr/bin/env/python
+
 import datetime
 from pymongo import MongoClient
 
@@ -307,10 +306,12 @@ def main():
     if 'Article' not in currentCollections:
         print('Creating Article collection!')
         db.create_collection('Article')
+
     # Model 2
     elif 'Reading_List' not in currentCollections:
         print('Creating Reading_List collection!')
         db.create_collection('Reading_List')
+
     # Model 3
     elif 'Jobs' not in currentCollections:
         print('Creating Jobs collection!')
@@ -360,11 +361,12 @@ def main():
             print("Or type 'exit' to close the shell...")
 
             # Get input, Make sure you don't get EOF!
+            # Python 2.x
             try:
-                var = input("HackerNews> ")
+                var = raw_input("Hacker News> ")
             except EOFError:
-                print("Invalid: EOF Detected!")
-                continue
+                print('EOF Found: Exiting...')
+                return
 
             args = var.split(" ")
             if args[0] == "exit":
@@ -385,7 +387,7 @@ def main():
                     continue
                 user = args[1]
                 title = args[2]
-                Action1(dbColl, user, title)
+                Action1(db, user, title)
 
             # Action 2: <describe the action here>
             # A user sees a list of the 1 highest-voted articles
@@ -394,7 +396,7 @@ def main():
                 if len(args) != 1:
                     print('Invalid number of arguments!')
                     continue
-                Action2(dbColl)
+                Action2(db)
 
             # Action 3: <describe the action here>
             # A user up-votes an article
@@ -403,7 +405,7 @@ def main():
                     print('Invalid number of arguments!')
                     continue
                 article = args[1]
-                Action3(dbColl, article)
+                Action3(db, article)
 
             # Action 4: <describe the action here>
             # A user comments on an article
@@ -413,7 +415,7 @@ def main():
                     continue
                 article = args[1]
                 comment = args[2]
-                Action4(dbColl, article, comment)
+                Action4(db, article, comment)
 
             # Action 5: <describe the action here>
             # User changes their password
@@ -423,7 +425,7 @@ def main():
                     continue
                 user = args[1]
                 newPasswd = args[2]
-                Action5(dbColl, user, newPasswd)
+                Action5(db, user, newPasswd)
 
             # Action 6: <describe the action here>
             # User Selects 10 most recently posted articles
@@ -431,7 +433,7 @@ def main():
                 if len(args) != 1:
                     print('Invalid number of arguments!')
                     continue
-                Action6(dbColl)
+                Action6(db)
 
             # Action 7: <describe the action here>
             # see all questions a user posted
@@ -440,7 +442,7 @@ def main():
                     print('Invalid number of arguments!')
                     continue
                 user = args[1]
-                Action7(dbColl, user)
+                Action7(db, user)
 
             # Action 8: <describe the action here>
             # User deletes an article they posted
@@ -449,10 +451,10 @@ def main():
                     print('Invalid number of arguments!')
                     continue
                 article = args[1]
-                Action8(dbColl, article)
+                Action8(db, article)
 
             else:
-                print('Invalid Action')
+                print('Invalid Action...')
 
     except KeyboardInterrupt:
         print('\nctrl-c received, exiting')
