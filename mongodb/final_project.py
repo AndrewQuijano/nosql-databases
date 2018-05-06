@@ -1,7 +1,9 @@
 #!/usr/bin/env/python
 
 import datetime
+from pprint import  pprint
 from pymongo import MongoClient
+import pymongo
 
 '''
 Put the use case you chose here. Then justify your database choice:
@@ -205,10 +207,10 @@ def Action1(db, user, title):
     print(Action1Result)
 
 # Action 2: <describe the action here>
-# A user sees a list of the 1 highest-voted articles
+# A user sees a list of the 1 highest voted article
 def Action2(db):
-    Action2Result = db.Article.find().sort({"$upvotes":1}).limit(1)
-    print(Action2Result)
+    for doc in db.Article.find().sort('upcount', pymongo.ASCENDING).limit(1):
+        print(doc)
 
 # Action 3: <describe the action here>
 # A user up-votes an article
@@ -350,7 +352,7 @@ def main():
         while(True):
 
             print("Action 1: A user publishes an article                    arguments: <1, username, title>")
-            print("Action 2: List the 10 highest upvoted articles           arguments: <2>")
+            print("Action 2: List the 1st highest upvoted article           arguments: <2>")
             print("Action 3: Upvote article                                 arguments: <3, article>")
             print("Action 4: User adds comment                              arguments: <4, article, comment>")
             print("Action 5: User changes their password                    arguments: <5, username, newPassword>")
