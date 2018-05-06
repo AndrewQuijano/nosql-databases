@@ -65,8 +65,8 @@ def init(collection):
     collection.insert([
     { "username" : "Emily", "password": "passwerd", "type":"user" },
     { "username" : "Jae",   "password": "passwerd123", "type":"user"},
-    { "username" : "Debra", "password": "Unhackable"},
-    { "username": "Andrew", "password": "final"}
+    { "username" : "Debra", "password": "Unhackable", "type":"user"},
+    { "username": "Andrew", "password": "final", "type":"user"}
     ])
 
     print('Created three default users...')
@@ -79,6 +79,7 @@ def init(collection):
         "timestamp": Object.getTimeStamp(),
         "comments:": [],
         "username" : "Emily",
+        "type":"article"
     },
     {
         "Title": "How to pass AP",
@@ -86,33 +87,46 @@ def init(collection):
         "timestamp": Object.getTimeStamp(),
         "comments:": [],
         "username": "Jae",
+        "type":"article"
     }
     ])
 
     # Build Reading List: 3
     collection.insert([
-        {"user": "Andrew", "Titles": ["How to pass NoSQL", "How to pass AP"]}
+        {"user": "Andrew", "Titles": ["How to pass NoSQL", "How to pass AP"], "type": "Reading"}
     ])
 
     # Build comments 4
     collection.insert([
-        {}
+        {
+            "user":"Emily",
+            "Article": "How to pass NoSQL",
+            "timestamp": Object.getTimeStamp(),
+            "response": "I wrote this article..."
+        }
     ])
 
-    # Build Job entry
+    # Build Job entry 5
     collection.insert([
-        {}
+        {
+            "Post Title": "Google looking for qualified programmers",
+            "timestamp" : Object.getTimeStamp(),
+            "link": "www.google.com",
+            "usera_applied":[],
+            "type": "Job Post"
+        }
     ])
 
-    # Build Question (1 Question, 1 User, have all answers)
+    # Build Question 6 and 7
     collection.insert([
-        {"user": "Andrew",
-         "Question": "How does ",
-         "Answer": {}
-         }
+        {
+            "user": "Andrew",
+            "Question": "How do I use Mongodb?",
+            "Answer": {}
+        }
     ])
 
-    # Build Questions ()
+    # Build Questions 8
     collection.insert([
         {}
     ])
@@ -148,16 +162,9 @@ def Action1(collection, user, title):
 # Action 2: <describe the action here>
 # A user sees a list of the 1 highest-voted articles
 def Action2(collection):
-    Action2Result = collection.aggregate([
-        {"$sort": {"upvote": 1}},
-        {"$group":
-            {
-                "_id": "$Title",
-            }
-        }
-    ])
+    Action2Result = collection.find().sort({"$upvotes":1}).limit(1);
     print(Action2Result)
-    
+
 # Action 3: <describe the action here>
 # A user up-votes an article
 def Action3(collection, article):
@@ -170,9 +177,30 @@ def Action3(collection, article):
 
 # Action 4: <describe the action here> (UPDATE)
 # A user comments on an article
-def Action4(collection, username, article):
-    # Atomic write to both Article AND Articles commented...
-    print('Action 1')
+def Action4(collection, user, article):
+
+    # Check if User exists
+    userFound = collection.find({"username": user})
+
+    if userFound == None:
+        print('Invalid, User not found! Please register to post an entry!')
+
+    # Check if Article exists
+    articleFound = collection.find({"Title": article})
+
+    if articleFound == None:
+        print('Invalid, Article not found!')
+
+    # Add comment into array
+    Action3Result = collection.update([
+
+    ])
+
+    # Add comment to list of all comments
+    Action3Resultpart2 = collection.insert([
+
+    ])
+    print(Action3Result)
 
 # Action 5: <describe the action here>
 # User changes their password
@@ -186,14 +214,7 @@ def Action5(collection, username, newPasswd):
 # Action 6: <describe the action here>
 # User Selects 10 most recently posted articles
 def Action6(collection):
-    Action6Result = collection.aggregate([
-    { "$sort": {"timestamp": 1}},
-    {"$group":
-    {
-        "_id": "$Title",
-        "lastSalesDate": { "$last": "$date"}
-    }}
-    ])
+    Action6Result = collection.find().sort({"$timestamp": 1}).limit(1);
     print(Action6Result)
 
 # Action 7: <describe the action here>
@@ -205,7 +226,14 @@ def Action7(collection, user):
 # Action 8: <describe the action here>
 # User deletes an article they posted
 def Action8(collection, article):
-    print('Action 1')
+
+    # Delete from Articles
+    Action8Result = collection.delete_one({"Title": article})
+    print(Action8Result)
+
+    # Delete all comments that have that "Article...
+    # Action8Resultpart2 = collection.delete_many({"Title": article})
+    # print(Action8Resultpart2)
 
 # Program to read input from user and use as needed
 def main():
@@ -223,6 +251,17 @@ def main():
 
     try:
         while(True):
+
+            print("Action 1: A user publishes an article                        <1, username, title>")
+            print("Action 2: List the 10 highest upvoted articles               <2>")
+            print("Action 3: Upvote article                                     <3, article>")
+            print("Action 4: User adds comment                                  <4, article, comment>")
+            print("Action 5: User changes their password                        <5, username, newPassword>")
+            print("Action 6: User Selects 10 most recently posted articles      <6>")
+            print("Action 7: See all questions a user posted                    <7, username>")
+            print("Action 8: User deletes an article they posted                <8, article>")
+            print("Or type 'exit' to close the shell...")
+
             # Get input, Make sure you don't get EOF!
             try:
                 var = input("HackerNews> ")
@@ -241,7 +280,7 @@ def main():
                 continue
 
             # Action 1: From given example
-            # A user publishes an article (INSERT)
+            # A user publishes an article
 
             if actionNumber == 1:
                 if len(args) != 3:
@@ -262,7 +301,6 @@ def main():
 
             # Action 3: <describe the action here>
             # A user up-votes an article
-
             elif actionNumber == 3:
                 if len(args) != 2:
                     print('Invalid number of arguments!')
