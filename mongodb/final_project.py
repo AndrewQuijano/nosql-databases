@@ -61,32 +61,72 @@ def init(collection):
     # Needed to time stamp stuff
     Object = ObjectId()
 
+    # Do I need to add TYPE (Article, Reading list, etc?)
     collection.insert([
-    { "username" : "Emily", "password": "passwerd" },
-    { "username" : "Jae",   "password": "passwerd123"},
+    { "username" : "Emily", "password": "passwerd", "type":"user" },
+    { "username" : "Jae",   "password": "passwerd123", "type":"user"},
     { "username" : "Debra", "password": "Unhackable"},
+    { "username": "Andrew", "password": "final"}
     ])
 
     print('Created three default users...')
 
-    # Build Article
+    # Build Article: 1, 2
     collection.insert([
     {
         "Title" : "How to pass NoSQL",
-        "upvotes": 0,
+        "upvotes": 1,
         "timestamp": Object.getTimeStamp(),
         "comments:": [],
         "username" : "Emily",
+    },
+    {
+        "Title": "How to pass AP",
+        "upvotes": 0,
+        "timestamp": Object.getTimeStamp(),
+        "comments:": [],
+        "username": "Jae",
     }
     ])
 
-    # Build Reading List
-    
+    # Build Reading List: 3
+    collection.insert([
+        {"user": "Andrew", "Titles": ["How to pass NoSQL", "How to pass AP"]}
+    ])
+
+    # Build comments 4
+    collection.insert([
+        {}
+    ])
+
+    # Build Job entry
+    collection.insert([
+        {}
+    ])
+
+    # Build Question (1 Question, 1 User, have all answers)
+    collection.insert([
+        {"user": "Andrew",
+         "Question": "How does ",
+         "Answer": {}
+         }
+    ])
+
+    # Build Questions ()
+    collection.insert([
+        {}
+    ])
+
+    # Build Articles Commented
+    collection.insert([
+        {}
+    ])
+
     print('Created 15 other objects...')
 
 # Action 1: From given example
-# A user publishes an article (UPDATE)
-def Action1(collection, user, title, link):
+# A user publishes an article (INSERT)
+def Action1(collection, user, title):
 
     # Check if the user exists
     userFound = collection.find({"username": user})
@@ -94,19 +134,30 @@ def Action1(collection, user, title, link):
     if userFound == None:
         print('Invalid, User not found! Please register to post an entry!')
 
-    # Insert document
-    Action1Result  = collection.inventory.insert([{
+    Object = ObjectId()
+    # Insert (create) document
+    Action1Result  = collection.inventory.insert_one([{
         "Title": title,
         "upvotes": 0,
+        "timestamp": Object.getTimeStamp(),
         "comments:": [],
-        "link": link}])
+        "username": user
+    }])
     print(Action1Result)
 
 # Action 2: <describe the action here>
-# A user sees a list of the 10 highest-voted articles
-def Action2():
-    print('Action 1')
-
+# A user sees a list of the 1 highest-voted articles
+def Action2(collection):
+    Action2Result = collection.aggregate([
+        {"$sort": {"upvote": 1}},
+        {"$group":
+            {
+                "_id": "$Title",
+            }
+        }
+    ])
+    print(Action2Result)
+    
 # Action 3: <describe the action here>
 # A user up-votes an article
 def Action3(collection, article):
@@ -119,27 +170,41 @@ def Action3(collection, article):
 
 # Action 4: <describe the action here> (UPDATE)
 # A user comments on an article
-def Action4(collection):
+def Action4(collection, username, article):
+    # Atomic write to both Article AND Articles commented...
     print('Action 1')
 
 # Action 5: <describe the action here>
 # User changes their password
-def Action5(collection):
-    print('Action 1')
+def Action5(collection, username, newPasswd):
+    Action3Result = collection.update(
+        {"username": username},     # Given this condition being true
+        {"$set": {"password": newPasswd}}
+    )
+    print(Action3Result)
 
 # Action 6: <describe the action here>
 # User Selects 10 most recently posted articles
 def Action6(collection):
-    print('Action 1')
+    Action6Result = collection.aggregate([
+    { "$sort": {"timestamp": 1}},
+    {"$group":
+    {
+        "_id": "$Title",
+        "lastSalesDate": { "$last": "$date"}
+    }}
+    ])
+    print(Action6Result)
 
 # Action 7: <describe the action here>
-# see all articles a user posted
-def Action7(collection):
-    print('Action 1')
+# see all questions a user posted
+def Action7(collection, user):
+    userAsks = collection.find({"username": user})
+    print(userAsks)
 
 # Action 8: <describe the action here>
 # User deletes an article they posted
-def Action8(collection):
+def Action8(collection, article):
     print('Action 1')
 
 # Program to read input from user and use as needed
@@ -175,63 +240,81 @@ def main():
             except Exception as ex:
                 continue
 
+            # Action 1: From given example
+            # A user publishes an article (INSERT)
+
             if actionNumber == 1:
-                if len(args) != 4:
+                if len(args) != 3:
                     print('Invalid number of arguments!')
                     continue
                 user = args[1]
                 title = args[2]
-                link = [3]
-                Action1(dbColl, user, title, link)
+                Action1(dbColl, user, title)
+
+            # Action 2: <describe the action here>
+            # A user sees a list of the 1 highest-voted articles
 
             elif actionNumber == 2:
-                if len(args) != 2:
+                if len(args) != 1:
                     print('Invalid number of arguments!')
                     continue
-                article = args[1]
-                Action2(article)
+                Action2(dbColl)
+
+            # Action 3: <describe the action here>
+            # A user up-votes an article
 
             elif actionNumber == 3:
                 if len(args) != 2:
                     print('Invalid number of arguments!')
                     continue
                 article = args[1]
-                Action3(article)
+                Action3(dbColl, article)
 
+            # Action 4: <describe the action here>
+            # A user comments on an article
             elif actionNumber == 4:
-                if len(args) != 2:
+                if len(args) != 3:
                     print('Invalid number of arguments!')
                     continue
                 article = args[1]
-                Action4(article)
+                comment = args[2]
+                Action4(dbColl, article, comment)
 
+            # Action 5: <describe the action here>
+            # User changes their password
             elif actionNumber == 5:
-                if len(args) != 2:
+                if len(args) != 3:
                     print('Invalid number of arguments!')
                     continue
-                article = args[1]
-                Action5(article)
+                user = args[1]
+                newPasswd = args[2]
+                Action5(dbColl, user, newPasswd)
 
+            # Action 6: <describe the action here>
+            # User Selects 10 most recently posted articles
             elif actionNumber == 6:
-                if len(args) != 2:
+                if len(args) != 1:
                     print('Invalid number of arguments!')
                     continue
-                article = args[1]
-                Action6(article)
+                Action6(dbColl)
 
+            # Action 7: <describe the action here>
+            # see all questions a user posted
             elif actionNumber == 7:
                 if len(args) != 2:
                     print('Invalid number of arguments!')
                     continue
-                article = args[1]
-                Action7(article)
+                user = args[1]
+                Action7(dbColl, user)
 
+            # Action 8: <describe the action here>
+            # User deletes an article they posted
             elif actionNumber == 8:
                 if len(args) != 2:
                     print('Invalid number of arguments!')
                     continue
                 article = args[1]
-                Action8(article)
+                Action8(dbColl, article)
 
             else:
                 print('Invalid Action')
