@@ -80,7 +80,7 @@ def init(db):
     Articles = db.Article.insert([
     {
         "Title" : "How to pass NoSQL",
-        "upvotes": 1,
+        "upvotes": 10,
         "timestamp": datetime.datetime.utcnow(),
         "comments:": ["That is so cool that the daughter of Professor Stolfo is teaching "
                                    "at Columbia as well!"],
@@ -95,13 +95,13 @@ def init(db):
     },
     {
         "Title": "How to pass Network Security",
-        "upvotes": 0,
+        "upvotes": 20,
         "timestamp": datetime.datetime.utcnow(),
         "comments:": ["The article was useful in completing the 3 programming assignments."],
         "username": "Debra",
     },
     {
-        "Title": "Programming",
+        "Title": "Code",
         "upvotes": 0,
         "timestamp": datetime.datetime.utcnow(),
         "comments:": [""],
@@ -196,7 +196,7 @@ def init(db):
 # Action 1: From given example
 # A user publishes an article (INSERT)
 def Action1(db, user, title):
-    name = ''.join(title)
+    name = ' '.join(title)
     print("user: " + str(user) + " title: " + str(name))
 
     # Check if the user exists
@@ -204,7 +204,7 @@ def Action1(db, user, title):
     if userFound == None:
         print('Invalid, User not found! Please register to post an entry!')
     else:
-        print('User Exists!')
+        print('User Exists! Proceed!')
 
     # Insert (create) document
     Action1Result  = db.Article.inventory.insert_many([{
@@ -221,81 +221,83 @@ def Action1(db, user, title):
 # Action 2: <describe the action here>
 # A user sees a list of the 1 highest voted article
 def Action2(db):
-    for doc in db.Article.find().sort('upcount', pymongo.ASCENDING).limit(1):
-        print(doc)
+    for doc in db.Article.find().sort('upcount', pymongo.ASCENDING).limit(10):
+        pprint(doc)
 
 # Action 3: <describe the action here>
 # A user up-votes an article
 def Action3(db, article):
 
     # Find the article and up vote it. DO IT in 1 UPDATE
-    Action3Result = db.Article.update(
+    Action3Result = db.Article.update_one(
         {"Title": article},         # Given this condition being true
         {"$inc": {"upvotes": 1}}    # Increment upvote
     )
-    pprint(Action3Result)
+
+    if Action3Result.modified_count == 1:
+        print('Just upvoted ' + str(article))
+    elif Action3Result.modified_count == 0:
+        print('No such Article was found!')
 
 # Action 4: <describe the action here>
 # A user comments on an article
 def Action4(db, user, article, comment):
-    comm = ''.join(comment)
-    print("user: " + str(user) + " article: " + str(article) + " title: " + str(comm))
-
-    # Check if User exists
-    userFound = db.User.find({"username": user})
-
-    if userFound == None:
-        print('Invalid, User not found! Please register to post an entry!')
-
-    # Check if Article exists
-    articleFound = db.User.find({"Title": article})
-
-    if articleFound == None:
-        print('Invalid, Article not found!')
+    comm = ' '.join(comment)
+    print("Action 4) user: " + str(user) + " article: " + str(article) + " comment: " + str(comm))
 
     # Add comment into array of Articles
-    Action4Result = db.Article.update(
+    Action4Result = db.Article.update_one(
         { "Article": article},
         { "$push": { "comment": comm}}
     )
-    print(Action4Result)
+    if Action4Result.modified_count == 1:
+        print('')
+    elif Action4Result.modified_count == 0:
+        print('No such Article was found! Denied to modify User_Comments Table!')
+        return
 
     # Add comment to list of all user_comments
-    Action4Resultpart2 = db.User_Comments.update(
+    Action4Resultpart2 = db.User_Comments.update_one(
         {"user": user},
         {"$push": {"comment": comm}}
     )
-    print(Action4Resultpart2)
-
+    if Action4Resultpart2.modified_count == 1:
+        print('Sucessfully added entry to User_Comments: ' + str(user))
+    elif Action4Result.modified_count == 0:
+        print('No such user found!')
 
 # Action 5: <describe the action here>
 # User changes their password
 def Action5(db, username, newPasswd):
-    Action3Result = db.User.update(
+    Action5Result = db.User.update_one(
         {"username": username},     # Given this condition being true
         {"$set": {"password": newPasswd}}
     )
-    print(Action3Result)
+    if Action5Result.modified_count == 1:
+        print('User: ' + str(username) + ' has new password: ' + str(newPasswd))
+    elif Action5Result.modified_count == 0:
+        print('Invalid: User NOT found!')
 
 # Action 6: <describe the action here>
 # Find all posted in a Market Place
 def Action6(db, user):
     Action6Result = db.MarketPlace.find({"user": user})
     for doc in Action6Result:
-        print(doc)
+        pprint(doc)
 
 # Action 7: <describe the action here>
 # see all questions a user posted
 def Action7(db, user):
     userAsks = db.User_Questions.find({"user": user})
     for doc in userAsks:
-        print(doc)
+        pprint(doc)
 
 # Action 8: <describe the action here>
 # Delete an Article
 def Action8(db, article):
-    art = ''.join(article)
+    art = ' '.join(article)
     print("Action 8: delete: " + art)
+
     # Delete from Articles
     Action8Result = db.Article.delete_one({"Title": art})
     if Action8Result.deleted_count == 1:
@@ -373,6 +375,7 @@ def main():
     try:
         while(True):
 
+            print(" ")
             print("Action 1: A user publishes an article                    arguments: <1, username, title>")
             print("Action 2: List the 1st highest upvoted article           arguments: <2>")
             print("Action 3: Upvote article                                 arguments: <3, article>")
