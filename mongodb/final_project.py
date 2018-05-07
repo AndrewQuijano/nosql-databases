@@ -72,9 +72,6 @@ def init(db):
     { "username": "Andrew", "password": "final"}
     ])
 
-    print(Users)
-    print('Created Four default users...')
-
     # Build Article: 1, 2, 3
     # Article is Primary Key
     Articles = db.Article.insert([
@@ -108,13 +105,11 @@ def init(db):
         "username": "Andrew",
     }
     ])
-    print(Articles)
 
     # Build Reading List: 4
     Reading = db.Reading_List.insert([
         {"user": "Andrew", "Titles": ["How to pass NoSQL", "How to pass AP", "How to pass Network Security"]}
     ])
-    print(Reading)
 
     # Build Job entry 5
     Job = db.Jobs.insert([
@@ -125,7 +120,6 @@ def init(db):
             "usera_applied":[],
         }
     ])
-    print(Job)
 
     # Build Question 6 and 7, 8
     # Primary Key: Question
@@ -140,7 +134,6 @@ def init(db):
             "Question": "How do I make a file system?",
         }
     ])
-    print(Questions)
 
     # Build Articles Comments to Questions: 9, 10, 11
     # Articles are Primary Key here!
@@ -162,10 +155,9 @@ def init(db):
             "Product Descrption": "MongoDB textbook"
         }
     ])
-    print(Market)
 
     # Articles commented 12, 13, 14 (3 seperate users commented
-    User_comments = db.User_Commens.insert([
+    User_comments = db.User_Comments.insert([
         {
             "username":"Emily",
             "comment": ["I learned how to code in C in this class"]
@@ -179,7 +171,6 @@ def init(db):
             "comment": ["That is so cool that the daughter of Professor Stolfo is teaching at Columbia as well!"]
         }
     ])
-    print(User_comments)
 
     # List of questions 15
     # Primary Key: User
@@ -189,8 +180,6 @@ def init(db):
             "Question": ["How do I use Mongodb?", "How do I use scapy?", "How do I make a file system?"]
         }
     ])
-    print(User_Asks)
-
     print('Created 15 other objects...')
 
 # Action 1: From given example
@@ -207,37 +196,36 @@ def Action1(db, user, title):
         print('User Exists! Proceed!')
 
     # Insert (create) document
-    Action1Result  = db.Article.inventory.insert_many([{
+    Action1Result  = db.Article.inventory.insert_one([{
         "Title": name,
         "upvotes": 0,
         "timestamp": datetime.datetime.utcnow(),
         "comments:": [],
         "username": user,
     }])
-    print(Action1Result)
-    for doc in Action1Result:
-        pprint(doc)
+    if Action1Result.inserted_id != None:
+        print('Successfully added: ' + str(name))
 
 # Action 2: <describe the action here>
 # A user sees a list of the 1 highest voted article
 def Action2(db):
-    for doc in db.Article.find().sort('upcount', pymongo.ASCENDING).limit(10):
+    for doc in db.Article.find().sort('up count', pymongo.ASCENDING).limit(10):
         pprint(doc)
 
 # Action 3: <describe the action here>
 # A user up-votes an article
 def Action3(db, article):
-
+    art = ' '.join(article)
     # Find the article and up vote it. DO IT in 1 UPDATE
     Action3Result = db.Article.update_one(
-        {"Title": article},         # Given this condition being true
+        {"Title": art},             # Given this condition being true
         {"$inc": {"upvotes": 1}}    # Increment upvote
     )
 
     if Action3Result.modified_count == 1:
-        print('Just upvoted ' + str(article))
+        print('Just upvoted ' + str(art))
     elif Action3Result.modified_count == 0:
-        print('No such Article was found!')
+        print('No such Article was found!' + str(art))
 
 # Action 4: <describe the action here>
 # A user comments on an article
@@ -247,24 +235,24 @@ def Action4(db, user, article, comment):
 
     # Add comment into array of Articles
     Action4Result = db.Article.update_one(
-        { "Article": article},
-        { "$push": { "comment": comm}}
+        { "Title": str(article)},
+        { "$push": { "comment": str(comm)}}
     )
     if Action4Result.modified_count == 1:
-        print('')
+        print('Added comment to article: ' + str(article))
     elif Action4Result.modified_count == 0:
-        print('No such Article was found! Denied to modify User_Comments Table!')
-        return
+        print('No such Article was found!' + str(article) + 'Denied to modify User_Comments Table!')
 
     # Add comment to list of all user_comments
     Action4Resultpart2 = db.User_Comments.update_one(
-        {"user": user},
-        {"$push": {"comment": comm}}
+        {"user": str(user)},
+        {"$push": {"comment": str(comm)}}
     )
+
     if Action4Resultpart2.modified_count == 1:
         print('Sucessfully added entry to User_Comments: ' + str(user))
     elif Action4Result.modified_count == 0:
-        print('No such user found!')
+        print('No such user found!: ' + str(user))
 
 # Action 5: <describe the action here>
 # User changes their password
@@ -368,7 +356,18 @@ def main():
         print('Creating User_Questions collection!')
         db.create_collection('User_Questions')
 
+    # Clean up Everything
+    db.Article.delete_many({})
+    db.Reading_List.delete_many({})
+    db.Jobs.delete_many({})
+    db.MarketPlace.delete_many({})
+    db.User.delete_many({})
+    db.User_Comments.delete_many({})
+    db.FAQ.delete_many({})
+    db.User_Comments({})
+
     init(db)
+
     # Can create collection and check if they exist...
     print('Initialized hackernews MongoDB...')
 
