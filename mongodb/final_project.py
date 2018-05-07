@@ -125,13 +125,16 @@ def init(db):
     # Primary Key: Question
     Questions = db.FAQ.insert([
         {
-            "Question": "How do I use Mongodb?"
+            "Question": "How do I use Mongodb?",
+            "Answers": []
         },
         {
-            "Question": "How do I use scapy?"
+            "Question": "How do I use scapy?",
+            "Answers": []
         },
         {
             "Question": "How do I make a file system?",
+            "Answers": []
         }
     ])
 
@@ -159,15 +162,15 @@ def init(db):
     # Articles commented 12, 13, 14 (3 seperate users commented
     User_comments = db.User_Comments.insert([
         {
-            "username":"Emily",
+            "user":"Emily",
             "comment": ["I learned how to code in C in this class"]
         },
         {
-            "username": "Andrew",
+            "user": "Andrew",
             "comment": ["The article was useful in completing the 3 programming assignments."]
         },
         {
-            "username": "Debra",
+            "user": "Debra",
             "comment": ["That is so cool that the daughter of Professor Stolfo is teaching at Columbia as well!"]
         }
     ])
@@ -196,20 +199,23 @@ def Action1(db, user, title):
         print('User Exists! Proceed!')
 
     # Insert (create) document
-    Action1Result  = db.Article.inventory.insert_one([{
-        "Title": name,
+    Action1Result = db.Article.insert({
+        "Title": str(name),
         "upvotes": 0,
         "timestamp": datetime.datetime.utcnow(),
         "comments:": [],
-        "username": user,
-    }])
-    if Action1Result.inserted_id != None:
-        print('Successfully added: ' + str(name))
+        "username": str(user),
+    })
+    if Action1Result != None:
+        print('Succesfully added article: ' + name)
+    else:
+        print('Failed to submit article: ' + name)
 
 # Action 2: <describe the action here>
 # A user sees a list of the 1 highest voted article
 def Action2(db):
-    for doc in db.Article.find().sort('up count', pymongo.ASCENDING).limit(10):
+    Sort = db.Article.find().sort('upvotes', pymongo.DESCENDING).limit(10)
+    for doc in Sort:
         pprint(doc)
 
 # Action 3: <describe the action here>
@@ -238,20 +244,24 @@ def Action4(db, user, article, comment):
         { "Title": str(article)},
         { "$push": { "comment": str(comm)}}
     )
-    if Action4Result.modified_count == 1:
-        print('Added comment to article: ' + str(article))
-    elif Action4Result.modified_count == 0:
-        print('No such Article was found!' + str(article) + 'Denied to modify User_Comments Table!')
 
-    # Add comment to list of all user_comments
     Action4Resultpart2 = db.User_Comments.update_one(
         {"user": str(user)},
         {"$push": {"comment": str(comm)}}
     )
 
-    if Action4Resultpart2.modified_count == 1:
-        print('Sucessfully added entry to User_Comments: ' + str(user))
+    if Action4Result.modified_count == 1:
+        print('Added comment to article: ' + str(article))
     elif Action4Result.modified_count == 0:
+        print('No such Article was found!' + str(article) + 'Denied to modify User_Comments Table!')
+
+    # For some odd reason, once I do the above step I can get to here?
+    # So yeah...either way the second command would have worked regardless
+    # Add comment to list of all user_comment
+
+    if Action4Resultpart2.modified_count == 1:
+        print('Successfully added entry to User_Comments: ' + str(user))
+    elif Action4Resultpart2.modified_count == 0:
         print('No such user found!: ' + str(user))
 
 # Action 5: <describe the action here>
@@ -286,14 +296,14 @@ def Action8(db, article):
     art = ' '.join(article)
     print("Action 8: delete: " + art)
 
-    # Delete from Articles
+    # Delete from Article
     Action8Result = db.Article.delete_one({"Title": art})
     if Action8Result.deleted_count == 1:
-        print("Article Deleted...")
+        print("Article Deleted..." + str(art))
     elif Action8Result.deleted_count == 0:
-        print("Failed to delete...")
+        print("Failed to delete..." + str(art))
     else:
-        print("You deleted more than 1 article? Did you duplicate?")
+        print("You deleted more than 1 article? Did you duplicate?" + str(art))
 
     # For future development...Delete all comments in User_Comments
     # Or maybe we can keep it, just as a permanent record?
@@ -364,7 +374,7 @@ def main():
     db.User.delete_many({})
     db.User_Comments.delete_many({})
     db.FAQ.delete_many({})
-    db.User_Comments({})
+    db.User_Comments.delete_many({})
 
     init(db)
 
@@ -376,7 +386,7 @@ def main():
 
             print(" ")
             print("Action 1: A user publishes an article                    arguments: <1, username, title>")
-            print("Action 2: List the 1st highest upvoted article           arguments: <2>")
+            print("Action 2: List the 10 highest upvoted article           arguments: <2>")
             print("Action 3: Upvote article                                 arguments: <3, article>")
             print("Action 4: User adds comment.                             arguments: <4, user arg[1] article "
                   "args[2], comment args[3:]>")
@@ -414,7 +424,7 @@ def main():
                 Action1(db, user, title)
 
             # Action 2: <describe the action here>
-            # A user sees a list of the 1 highest-voted articles
+            # A user sees a list of the 10 highest-voted articles
 
             elif actionNumber == 2:
                 if len(args) != 1:
